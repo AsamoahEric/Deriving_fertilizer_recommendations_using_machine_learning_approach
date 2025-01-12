@@ -6,7 +6,7 @@ output:
   word_document: default
   html_document: default
   pdf_document: default
-subtitle: "Random Forest Machine Learning Model for deriving Fertilizer Recommendations using Numerical Optimization Approach"
+subtitle: "Random Forest Machine Learning Model for deriving Fertilizer Recommendations"
 ---
 
 ```{r setup, include = FALSE}
@@ -22,7 +22,7 @@ rm(list=ls())
 
 ```{r}
 # Set working directory ----------------------
-setwd()
+setwd("")
 ```
 
 ```{r}
@@ -59,8 +59,8 @@ Amantin_data <- read.csv("./Fert_rec_Site_Amantin.csv")
 # Kokoben site information to derive  N, P, K fertilizer recommendation
 Kokoben_data <- read.csv("./Fert_rec_Site_Kokoben.csv")
 
-# Awiomso site information to derive  N, P, K fertilizer recommendation
-Awiomso_data <- read.csv("./Fert_rec_Site_Awiomso.csv")
+# Wioso site information to derive  N, P, K fertilizer recommendation
+Wioso_data <- read.csv("./Fert_rec_Site_Wioso.csv")
 
 # Optimized RF model for Maize Yield Prediction used to derive fertilizer recommendation
 rf_yield_model <- readRDS(file = "./final__yfit.rds")
@@ -68,105 +68,79 @@ rf_yield_model <- readRDS(file = "./final__yfit.rds")
 
 ```{r}
 # Deriving Fertilizer recommendation for Wichau site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Wichau <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Wichau <- list()
-fix_Wichau$features <- Wichau_data
-fix_Wichau$RFmodel <- rf_yield_model
-
-op_Wichau <- optim(par = c(50, 15, 15),
-            rec_Wichau,
-            gr = NULL,
-            fixed = fix_Wichau,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 100, 100),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Wichau
-```
-```{r}
 ###################  N Optimization  #############################
+
 q <- 1000
 
-Wichau_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
-Wichau_site_2 <- Wichau_data[rep(1, q),]
+Wichau_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
+Wichau_site_n <- Wichau_data[rep(1, q),]
 
-Wichau_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Wichau_site_2$P2O5_kg_ha <- rep(40, length.out = q)
-Wichau_site_2$K2O_kg_ha <- rep(20, length.out = q)
+Wichau_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Wichau_site_n$P2O5_kg_ha <- rep(35, length.out = q)
+Wichau_site_n$K2O_kg_ha <- rep(30, length.out = q)
 
-Wichau_site_2_N_fert_preds <- predict(rf_yield_model, Wichau_site_2)$predictions
+Wichau_site_N_fert_preds <- predict(rf_yield_model, Wichau_site_n)$predictions
 
 P <- ggplot()
-Wi_N <- P + geom_line(data = data.frame(nrow(Wichau_site_2), Wichau_site_2_N_fert_preds), 
-                   aes(Wichau_site_2$N_kg_ha, Wichau_site_2_N_fert_preds)) +
+Wi_N <- P + geom_line(data = data.frame(nrow(Wichau_site_n), Wichau_site_N_fert_preds), 
+                   aes(Wichau_site_n$N_kg_ha, Wichau_site_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(1700, 2000) +
   theme(text = element_text(size = 100))+
   theme_classic() 
-Wi_N
 
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
+Wi_N
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Wichau_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
-Wichau_site_3 <- Wichau_data[rep(1, q),]
+Wichau_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
+Wichau_site_p <- Wichau_data[rep(1, q),]
 
-Wichau_site_3$N_kg_ha <- rep(130, length.out = q)
-Wichau_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Wichau_site_3$K2O_kg_ha <- rep(20, length.out = q)
+Wichau_site_p$N_kg_ha <- rep(100, length.out = q)
+Wichau_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Wichau_site_p$K2O_kg_ha <- rep(35, length.out = q)
 
-Wichau_P2O5_fert_preds <- predict(rf_yield_model, Wichau_site_3)$predictions
+Wichau_P2O5_fert_preds <- predict(rf_yield_model, Wichau_site_p)$predictions
 
 P <- ggplot()
-Wi_P <- P + geom_line(data = data.frame(nrow(Wichau_site_3), Wichau_P2O5_fert_preds), 
-                   aes(Wichau_site_3$P2O5_kg_ha, Wichau_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Wi_P <- P + geom_line(data = data.frame(nrow(Wichau_site_p), Wichau_P2O5_fert_preds), 
+                   aes(Wichau_site_p$P2O5_kg_ha, Wichau_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1700, 2000) +
   theme(text = element_text(size = 100))+
-  theme_classic() 
-Wi_P
+  theme_classic()
 
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
+Wi_P
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Wichau_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
-Wichau_site_4 <- Wichau_data[rep(1, q),]
+Wichau_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Wichau_data))) 
+Wichau_site_k <- Wichau_data[rep(1, q),]
 
-Wichau_site_4$N_kg_ha <- rep(138, length.out = q)
-Wichau_site_4$P2O5_kg_ha <- rep(40, length.out = q)
-Wichau_site_4$K2O_kg_ha <- seq(0, 90, length.out = q)
+Wichau_site_k$N_kg_ha <- rep(100, length.out = q)
+Wichau_site_k$P2O5_kg_ha <- rep(30, length.out = q)
+Wichau_site_k$K2O_kg_ha <- seq(0, 90, length.out = q)
 
 Wichau_K2O_fert_preds <- predict(rf_yield_model, Wichau_site_4)$predictions
 
 P <- ggplot()
-Wi_K <- P + geom_line(data = data.frame(nrow(Wichau_site_4), Wichau_K2O_fert_preds), 
-                   aes(Wichau_site_4$K2O_kg_ha, Wichau_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Wi_K <- P + geom_line(data = data.frame(nrow(Wichau_site_k), Wichau_K2O_fert_preds), 
+                   aes(Wichau_site_k$K2O_kg_ha, Wichau_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1700, 2000) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Wi_K
@@ -177,146 +151,112 @@ Wi_K
 # Plot the NPK (3) graphs on one map
 plot_grid(Wi_N, Wi_P, Wi_K, align=("v"), labels = "Response curves for Wichau", label_size = 13, ncol = 2, nrow = 2)
 ```
-
 ```{r}
-png(file = "Wichau_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Wi_N, Wi_P, Wi_K, align=("v"), labels = "Response curves for Wichau", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Wichau.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Wi_N, Wi_P, Wi_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Wichau")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
 ```
 
-
 ```{r}
-# Predict yield based on new fertilizer recommendation for Wichau Location
+# Predict yield based on fertilizer recommendation for Wichau Location
 
 Wichau_opt <- Wichau_data
 Wichau_opt$N_kg_ha <- 100
 Wichau_opt$P2O5_kg_ha <- 30
 Wichau_opt$K2O_kg_ha <- 35
 
-y <- predict(rf_yield_model, Wichau_opt)$predictions
+Wichau_y <- predict(rf_yield_model, Wichau_opt)$predictions
 
-y
+Wichau_y
 ```
 
 
 ```{r}
 # Deriving Fertilizer recommendation for Nahaa site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Nahaa <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Nahaa <- list()
-fix_Nahaa$features <- Nahaa_data
-fix_Nahaa$RFmodel <- rf_yield_model
-
-
-op_Nahaa <- optim(par = c(40, 20, 20),
-            rec_Nahaa,
-            gr = NULL,
-            fixed = fix_Nahaa,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 100, 100),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Nahaa
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Nahaa_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
-Nahaa_site_2 <- Nahaa_data[rep(1, q),]
+Nahaa_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
+Nahaa_site_n <- Nahaa_data[rep(1, q),]
 
-Nahaa_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Nahaa_site_2$P2O5_kg_ha <- rep(85, length.out = q)
-Nahaa_site_2$K2O_kg_ha <- rep(72, length.out = q)
+Nahaa_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Nahaa_site_n$P2O5_kg_ha <- rep(30, length.out = q)
+Nahaa_site_n$K2O_kg_ha <- rep(40, length.out = q)
 
-Nahaa_N_fert_preds <- predict(rf_yield_model, Nahaa_site_2)$predictions
+Nahaa_N_fert_preds <- predict(rf_yield_model, Nahaa_site_n)$predictions
 
 P <- ggplot()
-Na_N <- P + geom_line(data = data.frame(nrow(Nahaa_site_2), Nahaa_N_fert_preds), 
-                   aes(Nahaa_site_2$N_kg_ha, Nahaa_N_fert_preds)) +
+Na_N <- P + geom_line(data = data.frame(nrow(Nahaa_site_n), Nahaa_N_fert_preds), 
+                   aes(Nahaa_site_n$N_kg_ha, Nahaa_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(1350, 1550) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Na_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Nahaa_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
-Nahaa_site_3 <- Nahaa_data[rep(1, q),]
+Nahaa_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
+Nahaa_site_p <- Nahaa_data[rep(1, q),]
 
-Nahaa_site_3$N_kg_ha <- rep(125, length.out = q)
-Nahaa_site_3$P2O5_kg_ha <- seq(0, 100, length.out = q)
-Nahaa_site_3$K2O_kg_ha <- rep(72, length.out = q)
+Nahaa_site_p$N_kg_ha <- rep(90, length.out = q)
+Nahaa_site_p$P2O5_kg_ha <- seq(0, 100, length.out = q)
+Nahaa_site_p$K2O_kg_ha <- rep(40, length.out = q)
 
-Nahaa_P2O5_fert_preds <- predict(rf_yield_model, Nahaa_site_3)$predictions
+Nahaa_P2O5_fert_preds <- predict(rf_yield_model, Nahaa_site_p)$predictions
 
 P <- ggplot()
-Na_P <- P + geom_line(data = data.frame(nrow(Nahaa_site_3), Nahaa_P2O5_fert_preds), 
-                   aes(Nahaa_site_3$P2O5_kg_ha, Nahaa_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Na_P <- P + geom_line(data = data.frame(nrow(Nahaa_site_p), Nahaa_P2O5_fert_preds), 
+                   aes(Nahaa_site_p$P2O5_kg_ha, Nahaa_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1350, 1550) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Na_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Nahaa_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
-Nahaa_site_4 <- Nahaa_data[rep(1, q),]
+Nahaa_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Nahaa_data))) 
+Nahaa_site_k <- Nahaa_data[rep(1, q),]
 
-Nahaa_site_4$N_kg_ha <- rep(125, length.out = q)
-Nahaa_site_4$P2O5_kg_ha <- rep(85, length.out = q)
-Nahaa_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Nahaa_site_k$N_kg_ha <- rep(90, length.out = q)
+Nahaa_site_k$P2O5_kg_ha <- rep(30, length.out = q)
+Nahaa_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Nahaa_K2O_fert_preds <- predict(rf_yield_model, Nahaa_site_4)$predictions
+Nahaa_K2O_fert_preds <- predict(rf_yield_model, Nahaa_site_k)$predictions
 
 P <- ggplot()
-Na_K <- P + geom_line(data = data.frame(nrow(Nahaa_site_4), Nahaa_K2O_fert_preds), 
-                   aes(Nahaa_site_4$K2O_kg_ha, Nahaa_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Na_K <- P + geom_line(data = data.frame(nrow(Nahaa_site_k), Nahaa_K2O_fert_preds), 
+                   aes(Nahaa_site_k$K2O_kg_ha, Nahaa_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1350, 1550) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Na_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Nahaa_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Na_N, Na_P, Na_K, align=("v"), labels = "Response curves for Nahaa", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Nahaa.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Na_N, Na_P, Na_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Nahaa")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
 ```
-
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Nahaa Location
@@ -333,126 +273,96 @@ Nahaa_y
 
 ```{r}
 # Deriving Fertilizer recommendation for Jirapa site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Jirapa <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Jirapa <- list()
-fix_Jirapa$features <- Jirapa_data
-fix_Jirapa$RFmodel <- rf_yield_model
-
-op_Jirapa <- optim(par = c(35, 15, 15),
-            rec_Jirapa,
-            gr = NULL,
-            fixed = fix_Jirapa,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 100, 100),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Jirapa
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Jirapa_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
-Jirapa_site_2 <- Jirapa_data[rep(1, q),]
+Jirapa_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
+Jirapa_site_n <- Jirapa_data[rep(1, q),]
 
-Jirapa_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Jirapa_site_2$P2O5_kg_ha <- rep(15, length.out = q)
-Jirapa_site_2$K2O_kg_ha <- rep(15, length.out = q)
+Jirapa_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Jirapa_site_n$P2O5_kg_ha <- rep(35, length.out = q)
+Jirapa_site_n$K2O_kg_ha <- rep(35, length.out = q)
 
-Jirapa_N_fert_preds <- predict(rf_yield_model, Jirapa_site_2)$predictions
+Jirapa_N_fert_preds <- predict(rf_yield_model, Jirapa_site_n)$predictions
 
 P <- ggplot()
-Ji_N <- P + geom_line(data = data.frame(nrow(Jirapa_site_2), Jirapa_N_fert_preds), 
-                   aes(Jirapa_site_2$N_kg_ha, Jirapa_N_fert_preds)) +
+Ji_N <- P + geom_line(data = data.frame(nrow(Jirapa_site_n), Jirapa_N_fert_preds), 
+                   aes(Jirapa_site_n$N_kg_ha, Jirapa_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 200) +
+  ylim(1600, 1800) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ji_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Jirapa_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
-Jirapa_site_3 <- Jirapa_data[rep(1, q),]
+Jirapa_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
+Jirapa_site_p <- Jirapa_data[rep(1, q),]
 
-Jirapa_site_3$N_kg_ha <- rep(35, length.out = q)
-Jirapa_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Jirapa_site_3$K2O_kg_ha <- rep(15, length.out = q)
+Jirapa_site_p$N_kg_ha <- rep(90, length.out = q)
+Jirapa_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Jirapa_site_p$K2O_kg_ha <- rep(35, length.out = q)
 
-Jirapa_P2O5_fert_preds <- predict(rf_yield_model, Jirapa_site_3)$predictions
+Jirapa_P2O5_fert_preds <- predict(rf_yield_model, Jirapa_site_p)$predictions
 
 P <- ggplot()
-Ji_P <- P + geom_line(data = data.frame(nrow(Jirapa_site_3), Jirapa_P2O5_fert_preds), 
-                   aes(Jirapa_site_3$P2O5_kg_ha, Jirapa_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Ji_P <- P + geom_line(data = data.frame(nrow(Jirapa_site_p), Jirapa_P2O5_fert_preds), 
+                   aes(Jirapa_site_p$P2O5_kg_ha, Jirapa_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1600, 1800) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ji_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Jirapa_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
-Jirapa_site_4 <- Jirapa_data[rep(1, q),]
+Jirapa_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Jirapa_data))) 
+Jirapa_site_k <- Jirapa_data[rep(1, q),]
 
-Jirapa_site_4$N_kg_ha <- rep(35, length.out = q)
-Jirapa_site_4$P2O5_kg_ha <- rep(15, length.out = q)
-Jirapa_site_4$K2O_kg_ha <- seq(0, 80, length.out = q)
+Jirapa_site_k$N_kg_ha <- rep(90, length.out = q)
+Jirapa_site_k$P2O5_kg_ha <- rep(35, length.out = q)
+Jirapa_site_k$K2O_kg_ha <- seq(0, 80, length.out = q)
 
-Jirapa_K2O_fert_preds <- predict(rf_yield_model, Jirapa_site_4)$predictions
+Jirapa_K2O_fert_preds <- predict(rf_yield_model, Jirapa_site_k)$predictions
 
 P <- ggplot()
 Ji_K <- P + geom_line(data = data.frame(nrow(Jirapa_site_4), Jirapa_K2O_fert_preds), 
-                   aes(Jirapa_site_4$K2O_kg_ha, Jirapa_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+                   aes(Jirapa_site_k$K2O_kg_ha, Jirapa_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1600, 1800) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ji_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Jirapa_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Ji_N, Ji_P, Ji_K, align=("v"), labels = "Response curves for Jirapa", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Jirapa.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Ji_N, Ji_P, Ji_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Jirapa")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
-```
 
+plot_grid(Ji_N, Ji_P, Ji_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+```
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Jirapa Location
 
 Jirapa_opt <- Jirapa_data
-Jirapa_opt$N_kg_ha <- 95
+Jirapa_opt$N_kg_ha <- 90
 Jirapa_opt$P2O5_kg_ha <- 35
 Jirapa_opt$K2O_kg_ha <- 35
 
@@ -464,120 +374,90 @@ Jirapa_y
 
 ```{r}
 # Fertiler recommendation for Lawra site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Lawra <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Lawra <- list()
-fix_Lawra$features <- Lawra_data
-fix_Lawra$RFmodel <- rf_yield_model
-
-op_Lawra <- optim(par = c(40, 25, 25),
-            rec_Lawra,
-            gr = NULL,
-            fixed = fix_Lawra,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 80, 80),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Lawra
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Lawra_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
-Lawra_site_2 <- Lawra_data[rep(1, q),]
+Lawra_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
+Lawra_site_n <- Lawra_data[rep(1, q),]
 
-Lawra_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Lawra_site_2$P2O5_kg_ha <- rep(25, length.out = q)
-Lawra_site_2$K2O_kg_ha <- rep(25, length.out = q)
+Lawra_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Lawra_site_n$P2O5_kg_ha <- rep(30, length.out = q)
+Lawra_site_n$K2O_kg_ha <- rep(35, length.out = q)
 
-Lawra_N_fert_preds <- predict(rf_yield_model, Lawra_site_2)$predictions
+Lawra_N_fert_preds <- predict(rf_yield_model, Lawra_site_n)$predictions
 
 P <- ggplot()
-La_N <- P + geom_line(data = data.frame(nrow(Lawra_site_2), Lawra_N_fert_preds), 
-                   aes(Lawra_site_2$N_kg_ha, Lawra_N_fert_preds)) +
+La_N <- P + geom_line(data = data.frame(nrow(Lawra_site_n), Lawra_N_fert_preds), 
+                   aes(Lawra_site_n$N_kg_ha, Lawra_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 160) +
+  ylim(1600, 1850) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 La_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Lawra_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
-Lawra_site_3 <- Lawra_data[rep(1, q),]
+Lawra_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
+Lawra_site_p <- Lawra_data[rep(1, q),]
 
-Lawra_site_3$N_kg_ha <- rep(40, length.out = q)
-Lawra_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Lawra_site_3$K2O_kg_ha <- rep(25, length.out = q)
+Lawra_site_p$N_kg_ha <- rep(90, length.out = q)
+Lawra_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Lawra_site_p$K2O_kg_ha <- rep(35, length.out = q)
 
-Lawra_P2O5_fert_preds <- predict(rf_yield_model, Lawra_site_3)$predictions
+Lawra_P2O5_fert_preds <- predict(rf_yield_model, Lawra_site_p)$predictions
 
 P <- ggplot()
-La_P <- P + geom_line(data = data.frame(nrow(Lawra_site_3), Lawra_P2O5_fert_preds), 
-                   aes(Lawra_site_3$P2O5_kg_ha, Lawra_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+La_P <- P + geom_line(data = data.frame(nrow(Lawra_site_p), Lawra_P2O5_fert_preds), 
+                   aes(Lawra_site_p$P2O5_kg_ha, Lawra_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1600, 1850) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 La_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Lawra_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
-Lawra_site_4 <- Lawra_data[rep(1, q),]
+Lawra_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Lawra_data))) 
+Lawra_site_k <- Lawra_data[rep(1, q),]
 
-Lawra_site_4$N_kg_ha <- rep(40, length.out = q)
-Lawra_site_4$P2O5_kg_ha <- rep(25, length.out = q)
-Lawra_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Lawra_site_k$N_kg_ha <- rep(90, length.out = q)
+Lawra_site_k$P2O5_kg_ha <- rep(30, length.out = q)
+Lawra_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Lawra_K2O_fert_preds <- predict(rf_yield_model, Lawra_site_4)$predictions
+Lawra_K2O_fert_preds <- predict(rf_yield_model, Lawra_site_k)$predictions
 
 P <- ggplot()
-La_K <- P + geom_line(data = data.frame(nrow(Lawra_site_4), Lawra_K2O_fert_preds), 
-                   aes(Lawra_site_4$K2O_kg_ha, Lawra_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+La_K <- P + geom_line(data = data.frame(nrow(Lawra_site_k), Lawra_K2O_fert_preds), 
+                   aes(Lawra_site_k$K2O_kg_ha, Lawra_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1600, 1850) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 La_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Lawra_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(La_N, La_P, La_K, align=("v"), labels = "Response curves for Lawra", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Lawra.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(La_N, La_P, La_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Lawra")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
-```
 
+plot_grid(La_N, La_P, La_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+```
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Lawra Location
@@ -595,120 +475,90 @@ Lawra_y
 
 ```{r}
 # Deriving Fertilizer recommendation for Kyeremfaso site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Kyeremfaso <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Kyeremfaso <- list()
-fix_Kyeremfaso$features <- Kyeremfaso_data
-fix_Kyeremfaso$RFmodel <- rf_yield_model
-
-op_Kyeremfaso <- optim(par = c(40, 25, 25),
-            rec_Kyeremfaso,
-            gr = NULL,
-            fixed = fix_Kyeremfaso,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 80, 80),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Kyeremfaso
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Kyeremfaso_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
-Kyeremfaso_site_2 <- Kyeremfaso_data[rep(1, q),]
+Kyeremfaso_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
+Kyeremfaso_site_n <- Kyeremfaso_data[rep(1, q),]
 
-Kyeremfaso_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Kyeremfaso_site_2$P2O5_kg_ha <- rep(56, length.out = q)
-Kyeremfaso_site_2$K2O_kg_ha <- rep(42, length.out = q)
+Kyeremfaso_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Kyeremfaso_site_n$P2O5_kg_ha <- rep(35, length.out = q)
+Kyeremfaso_site_n$K2O_kg_ha <- rep(45, length.out = q)
 
-Kyeremfaso_N_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_2)$predictions
+Kyeremfaso_N_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_n)$predictions
 
 P <- ggplot()
-Ky_N <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_2), Kyeremfaso_N_fert_preds), 
-                   aes(Kyeremfaso_site_2$N_kg_ha, Kyeremfaso_N_fert_preds)) +
+Ky_N <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_n), Kyeremfaso_N_fert_preds), 
+                   aes(Kyeremfaso_site_n$N_kg_ha, Kyeremfaso_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(1800, 2300) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ky_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Kyeremfaso_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
-Kyeremfaso_site_3 <- Kyeremfaso_data[rep(1, q),]
+Kyeremfaso_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
+Kyeremfaso_site_p <- Kyeremfaso_data[rep(1, q),]
 
-Kyeremfaso_site_3$N_kg_ha <- rep(88, length.out = q)
-Kyeremfaso_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Kyeremfaso_site_3$K2O_kg_ha <- rep(42, length.out = q)
+Kyeremfaso_site_p$N_kg_ha <- rep(80, length.out = q)
+Kyeremfaso_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Kyeremfaso_site_p$K2O_kg_ha <- rep(45, length.out = q)
 
-Kyeremfaso_P2O5_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_3)$predictions
+Kyeremfaso_P2O5_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_p)$predictions
 
 P <- ggplot()
-Ky_P <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_3), Kyeremfaso_P2O5_fert_preds), 
-                   aes(Kyeremfaso_site_3$P2O5_kg_ha, Kyeremfaso_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Ky_P <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_p), Kyeremfaso_P2O5_fert_preds), 
+                   aes(Kyeremfaso_site_p$P2O5_kg_ha, Kyeremfaso_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1800, 2300) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ky_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Kyeremfaso_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
-Kyeremfaso_site_4 <- Kyeremfaso_data[rep(1, q),]
+Kyeremfaso_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Kyeremfaso_data))) 
+Kyeremfaso_site_k <- Kyeremfaso_data[rep(1, q),]
 
-Kyeremfaso_site_4$N_kg_ha <- rep(88, length.out = q)
-Kyeremfaso_site_4$P2O5_kg_ha <- rep(56, length.out = q)
-Kyeremfaso_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Kyeremfaso_site_k$N_kg_ha <- rep(80, length.out = q)
+Kyeremfaso_site_k$P2O5_kg_ha <- rep(35, length.out = q)
+Kyeremfaso_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Kyeremfaso_K2O_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_4)$predictions
+Kyeremfaso_K2O_fert_preds <- predict(rf_yield_model, Kyeremfaso_site_k)$predictions
 
 P <- ggplot()
-Ky_K <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_4), Kyeremfaso_K2O_fert_preds), 
-                   aes(Kyeremfaso_site_4$K2O_kg_ha, Kyeremfaso_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Ky_K <- P + geom_line(data = data.frame(nrow(Kyeremfaso_site_k), Kyeremfaso_K2O_fert_preds), 
+                   aes(Kyeremfaso_site_k$K2O_kg_ha, Kyeremfaso_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1800, 2300) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ky_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Kyeremfaso_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Ky_N, Ky_P, Ky_K, align=("v"), labels = "Response curves for Kyeremfaso", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Kyeremfaso.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Ky_N, Ky_P, Ky_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Kyeremfaso")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
-```
 
+plot_grid(Ky_N, Ky_P, Ky_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+```
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Kyeremfaso Location
@@ -723,123 +573,92 @@ Kyeremfaso_y <- predict(rf_yield_model, Kyeremfaso_opt)$predictions
 Kyeremfaso_y
 ```
 
-
 ```{r}
 # Deriving Fertilizer recommendation for Atebubu site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Atebubu <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Atebubu <- list()
-fix_Atebubu$features <- Atebubu_data
-fix_Atebubu$RFmodel <- rf_yield_model
-
-op_Atebubu <- optim(par = c(60, 20, 20),
-            rec_Atebubu,
-            gr = NULL,
-            fixed = fix_Atebubu,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(300, 100, 100),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Atebubu
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Atebubu_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
-Atebubu_site_2 <- Atebubu_data[rep(1, q),]
+Atebubu_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
+Atebubu_site_n <- Atebubu_data[rep(1, q),]
 
-Atebubu_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Atebubu_site_2$P2O5_kg_ha <- rep(90, length.out = q)
-Atebubu_site_2$K2O_kg_ha <- rep(100, length.out = q)
+Atebubu_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Atebubu_site_n$P2O5_kg_ha <- rep(55, length.out = q)
+Atebubu_site_n$K2O_kg_ha <- rep(55, length.out = q)
 
-Atebubu_N_fert_preds <- predict(rf_yield_model, Atebubu_site_2)$predictions
+Atebubu_N_fert_preds <- predict(rf_yield_model, Atebubu_site_n)$predictions
 
 P <- ggplot()
-At_N <- P + geom_line(data = data.frame(nrow(Atebubu_site_2), Atebubu_N_fert_preds), 
-                   aes(Atebubu_site_2$N_kg_ha, Atebubu_N_fert_preds)) +
+At_N <- P + geom_line(data = data.frame(nrow(Atebubu_site_n), Atebubu_N_fert_preds), 
+                   aes(Atebubu_site_n$N_kg_ha, Atebubu_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(30, 200) +
+  ylim(1700, 1820) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 At_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Atebubu_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
-Atebubu_site_3 <- Atebubu_data[rep(1, q),]
+Atebubu_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
+Atebubu_site_p <- Atebubu_data[rep(1, q),]
 
-Atebubu_site_3$N_kg_ha <- rep(176, length.out = q)
-Atebubu_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Atebubu_site_3$K2O_kg_ha <- rep(100, length.out = q)
+Atebubu_site_p$N_kg_ha <- rep(120, length.out = q)
+Atebubu_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Atebubu_site_p$K2O_kg_ha <- rep(55, length.out = q)
 
-Atebubu_P2O5_fert_preds <- predict(rf_yield_model, Atebubu_site_3)$predictions
+Atebubu_P2O5_fert_preds <- predict(rf_yield_model, Atebubu_site_p)$predictions
 
 P <- ggplot()
-At_P <- P + geom_line(data = data.frame(nrow(Atebubu_site_3), Atebubu_P2O5_fert_preds), 
-                   aes(Atebubu_site_3$P2O5_kg_ha, Atebubu_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+At_P <- P + geom_line(data = data.frame(nrow(Atebubu_site_p), Atebubu_P2O5_fert_preds), 
+                   aes(Atebubu_site_p$P2O5_kg_ha, Atebubu_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1700, 1820) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 At_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Atebubu_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
-Atebubu_site_4 <- Atebubu_data[rep(1, q),]
+Atebubu_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Atebubu_data))) 
+Atebubu_site_k <- Atebubu_data[rep(1, q),]
 
-Atebubu_site_4$N_kg_ha <- rep(176, length.out = q)
-Atebubu_site_4$P2O5_kg_ha <- rep(90, length.out = q)
-Atebubu_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Atebubu_site_k$N_kg_ha <- rep(120, length.out = q)
+Atebubu_site_k$P2O5_kg_ha <- rep(55, length.out = q)
+Atebubu_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Atebubu_K2O_fert_preds <- predict(rf_yield_model, Atebubu_site_4)$predictions
+Atebubu_K2O_fert_preds <- predict(rf_yield_model, Atebubu_site_k)$predictions
 
 P <- ggplot()
-At_K <- P + geom_line(data = data.frame(nrow(Atebubu_site_4), Atebubu_K2O_fert_preds), 
-                   aes(Atebubu_site_4$K2O_kg_ha, Atebubu_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+At_K <- P + geom_line(data = data.frame(nrow(Atebubu_site_k), Atebubu_K2O_fert_preds), 
+                   aes(Atebubu_site_k$K2O_kg_ha, Atebubu_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1700, 1820) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 At_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Atebubu_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(At_N, At_P, At_K, align=("v"), labels = "Response curves for Atebubu", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Atebubu.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(At_N, At_P, At_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Atebubu")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
-```
 
+plot_grid(At_N, At_P, At_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+```
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Atebubu Location
@@ -854,124 +673,92 @@ Atebubu_y <- predict(rf_yield_model, Atebubu_opt)$predictions
 Atebubu_y
 ```
 
-
 ```{r}
 # Deriving Fertilizer recommendation for Amantin site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Amantin <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Amantin <- list()
-fix_Amantin$features <- Amantin_data
-fix_Amantin$RFmodel <- rf_yield_model
-
-op_Amantin <- optim(par = c(60, 25, 25),
-            rec_Amantin,
-            gr = NULL,
-            fixed = fix_Amantin,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 80, 80),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(5, 5, 5)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Amantin
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Amantin_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
-Amantin_site_2 <- Amantin_data[rep(1, q),]
+Amantin_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
+Amantin_site_n <- Amantin_data[rep(1, q),]
 
-Amantin_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Amantin_site_2$P2O5_kg_ha <- rep(40, length.out = q)
-Amantin_site_2$K2O_kg_ha <- rep(30, length.out = q)
+Amantin_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Amantin_site_n$P2O5_kg_ha <- rep(55, length.out = q)
+Amantin_site_n$K2O_kg_ha <- rep(55, length.out = q)
 
-Amantin_N_fert_preds <- predict(rf_yield_model, Amantin_site_2)$predictions
+Amantin_N_fert_preds <- predict(rf_yield_model, Amantin_site_n)$predictions
 
 P <- ggplot()
-Am_N <- P + geom_line(data = data.frame(nrow(Amantin_site_2), Amantin_N_fert_preds), 
-                   aes(Amantin_site_2$N_kg_ha, Amantin_N_fert_preds)) +
+Am_N <- P + geom_line(data = data.frame(nrow(Amantin_site_n), Amantin_N_fert_preds), 
+                   aes(Amantin_site_n$N_kg_ha, Amantin_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(2300, 2500) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Am_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Amantin_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
-Amantin_site_3 <- Amantin_data[rep(1, q),]
+Amantin_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
+Amantin_site_p <- Amantin_data[rep(1, q),]
 
-Amantin_site_3$N_kg_ha <- rep(80, length.out = q)
-Amantin_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Amantin_site_3$K2O_kg_ha <- rep(30, length.out = q)
+Amantin_site_p$N_kg_ha <- rep(90, length.out = q)
+Amantin_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Amantin_site_p$K2O_kg_ha <- rep(55, length.out = q)
 
-Amantin_P2O5_fert_preds <- predict(rf_yield_model, Amantin_site_3)$predictions
+Amantin_P2O5_fert_preds <- predict(rf_yield_model, Amantin_site_p)$predictions
 
 P <- ggplot()
-Am_P <- P + geom_line(data = data.frame(nrow(Amantin_site_3), Amantin_P2O5_fert_preds), 
-                   aes(Amantin_site_3$P2O5_kg_ha, Amantin_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Am_P <- P + geom_line(data = data.frame(nrow(Amantin_site_p), Amantin_P2O5_fert_preds), 
+                   aes(Amantin_site_p$P2O5_kg_ha, Amantin_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(2300, 2500) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Am_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Amantin_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
-Amantin_site_4 <- Amantin_data[rep(1, q),]
+Amantin_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Amantin_data))) 
+Amantin_site_k <- Amantin_data[rep(1, q),]
 
-Amantin_site_4$N_kg_ha <- rep(80, length.out = q)
-Amantin_site_4$P2O5_kg_ha <- rep(40, length.out = q)
-Amantin_site_4$K2O_kg_ha <- seq(0, 90, length.out = q)
+Amantin_site_k$N_kg_ha <- rep(90, length.out = q)
+Amantin_site_k$P2O5_kg_ha <- rep(55, length.out = q)
+Amantin_site_k$K2O_kg_ha <- seq(0, 90, length.out = q)
 
-Amantin_K2O_fert_preds <- predict(rf_yield_model, Amantin_site_4)$predictions
+Amantin_K2O_fert_preds <- predict(rf_yield_model, Amantin_site_k)$predictions
 
 P <- ggplot()
-Am_K <- P + geom_line(data = data.frame(nrow(Amantin_site_4), Amantin_K2O_fert_preds), 
-                   aes(Amantin_site_4$K2O_kg_ha, Amantin_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Am_K <- P + geom_line(data = data.frame(nrow(Amantin_site_k), Amantin_K2O_fert_preds), 
+                   aes(Amantin_site_k$K2O_kg_ha, Amantin_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(15, 80) +
+  ylim(2300, 2500) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Am_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Amantin_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Am_N, Am_P, Am_K, align=("v"), labels = "Response curves for Amantin", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Amantin.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Am_N, Am_P, Am_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Amantin")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
+
+plot_grid(Am_N, Am_P, Am_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
 ```
-
-
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Amantin Location
@@ -988,118 +775,89 @@ Amantin_y
 
 ```{r}
 # Deriving Fertilizer recommendation for Kokoben site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Kokoben <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
 
-fix_Kokoben <- list()
-fix_Kokoben$features <- Kokoben_data
-fix_Kokoben$RFmodel <- rf_yield_model
-
-op_Kokoben <- optim(par = c(40, 20, 5),
-            rec_Kokoben,
-            gr = NULL,
-            fixed = fix_Kokoben,
-            method = "L-BFGS-B",
-            lower = c(0, 0, 0),
-            upper = c(200, 100, 100),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(10, 10, 10)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Kokoben
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Kokoben_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
-Kokoben_site_2 <- Kokoben_data[rep(1, q),]
+Kokoben_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
+Kokoben_site_n <- Kokoben_data[rep(1, q),]
 
-Kokoben_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Kokoben_site_2$P2O5_kg_ha <- rep(75, length.out = q)
-Kokoben_site_2$K2O_kg_ha <- rep(93, length.out = q)
+Kokoben_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Kokoben_site_n$P2O5_kg_ha <- rep(40, length.out = q)
+Kokoben_site_n$K2O_kg_ha <- rep(45, length.out = q)
 
-Kokoben_N_fert_preds <- predict(rf_yield_model, Kokoben_site_2)$predictions
+Kokoben_N_fert_preds <- predict(rf_yield_model, Kokoben_site_n)$predictions
 
 P <- ggplot()
-Ko_N <- P + geom_line(data = data.frame(nrow(Kokoben_site_2), Kokoben_N_fert_preds), 
-                   aes(Kokoben_site_2$N_kg_ha, Kokoben_N_fert_preds)) +
+Ko_N <- P + geom_line(data = data.frame(nrow(Kokoben_site_n), Kokoben_N_fert_preds), 
+                   aes(Kokoben_site_n$N_kg_ha, Kokoben_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(2000, 2350) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ko_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Kokoben_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
-Kokoben_site_3 <- Kokoben_data[rep(1, q),]
+Kokoben_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
+Kokoben_site_p <- Kokoben_data[rep(1, q),]
 
-Kokoben_site_3$N_kg_ha <- rep(120, length.out = q)
-Kokoben_site_3$P2O5_kg_ha <- seq(0, 100, length.out = q)
-Kokoben_site_3$K2O_kg_ha <- rep(93, length.out = q)
+Kokoben_site_p$N_kg_ha <- rep(100, length.out = q)
+Kokoben_site_p$P2O5_kg_ha <- seq(0, 100, length.out = q)
+Kokoben_site_p$K2O_kg_ha <- rep(45, length.out = q)
 
-Kokoben_P2O5_fert_preds <- predict(rf_yield_model, Kokoben_site_3)$predictions
+Kokoben_P2O5_fert_preds <- predict(rf_yield_model, Kokoben_site_p)$predictions
 
 P <- ggplot()
-Ko_P <- P + geom_line(data = data.frame(nrow(Kokoben_site_3), Kokoben_P2O5_fert_preds), 
-                   aes(Kokoben_site_3$P2O5_kg_ha, Kokoben_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Ko_P <- P + geom_line(data = data.frame(nrow(Kokoben_site_p), Kokoben_P2O5_fert_preds), 
+                   aes(Kokoben_site_p$P2O5_kg_ha, Kokoben_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(2000, 2300) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ko_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Kokoben_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
-Kokoben_site_4 <- Kokoben_data[rep(1, q),]
+Kokoben_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Kokoben_data))) 
+Kokoben_site_k <- Kokoben_data[rep(1, q),]
 
-Kokoben_site_4$N_kg_ha <- rep(120, length.out = q)
-Kokoben_site_4$P2O5_kg_ha <- rep(75, length.out = q)
-Kokoben_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Kokoben_site_k$N_kg_ha <- rep(100, length.out = q)
+Kokoben_site_k$P2O5_kg_ha <- rep(40, length.out = q)
+Kokoben_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Kokoben_K2O_fert_preds <- predict(rf_yield_model, Kokoben_site_4)$predictions
+Kokoben_K2O_fert_preds <- predict(rf_yield_model, Kokoben_site_k)$predictions
 
 P <- ggplot()
-Ko_K <- P + geom_line(data = data.frame(nrow(Kokoben_site_4), Kokoben_K2O_fert_preds), 
-                   aes(Kokoben_site_4$K2O_kg_ha, Kokoben_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Ko_K <- P + geom_line(data = data.frame(nrow(Kokoben_site_k), Kokoben_K2O_fert_preds), 
+                   aes(Kokoben_site_k$K2O_kg_ha, Kokoben_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(2000, 2300) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Ko_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
-png(file = "Kokoben_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Ko_N, Ko_P, Ko_K, align=("v"), labels = "Response curves for Kokoben", label_size = 13, ncol = 2, nrow = 2)
+png(file = "Response curves for Kokoben.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Ko_N, Ko_P, Ko_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Kokoben")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
 dev.off()
+
+plot_grid(Ko_N, Ko_P, Ko_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
 ```
 
 ```{r}
@@ -1114,131 +872,101 @@ Kokoben_y <- predict(rf_yield_model, Kokoben_opt)$predictions
 Kokoben_y
 ```
 
-
 ```{r}
-# Deriving Fertilizer recommendation for Awiomso site
-'
-fixed: Should be a list containing the following variables
-      features: S, E, C and M which stand for other features than NPK. (fixed$features)
-      RFmodel: The trained RF model (fixed$RFmodel)
-'
-rec_Awiomso <- function(F, fixed){
-  data_tst <- fixed$features
-  data_tst$N_kg_ha <- F[1]
-  data_tst$P2O5_kg_ha <- F[2]
-  data_tst$K2O_kg_ha <- F[3]
-  y <- predict(fixed$RFmodel, data_tst)$predictions
-}
+# Deriving Fertilizer recommendation for Wioso site
 
-fix_Awiomso <- list()
-fix_Awiomso$features <- Awiomso_data
-fix_Awiomso$RFmodel <- rf_yield_model
-
-op_Awiomso <- optim(par = c(60, 25, 25),
-            rec_Awiomso,
-            gr = NULL,
-            fixed = fix_Awiomso,
-            method = "L-BFGS-B",
-            lower = c(1, 1, 1),
-            upper = c(200, 80, 80),
-            control = list(trace = TRUE, fnscale = -1, maxit = 5000, ndeps = c(10, 10, 10)),
-            hessian = FALSE
-            )
-
-# Summary of output results containing combination of N, P, K with predicted yields
-op_Awiomso
-```
-
-```{r}
 ###################  N Optimization  #############################
 q <- 1000
 
-Awiomso_site_2 <- data.frame(matrix(0, nrow = q, ncol = ncol(Awiomso_data))) 
-Awiomso_site_2 <- Awiomso_data[rep(1, q),]
+Wioso_site_n <- data.frame(matrix(0, nrow = q, ncol = ncol(Wioso_data))) 
+Wioso_site_n <- Awiomso_data[rep(1, q),]
 
-Awiomso_site_2$N_kg_ha <- seq(0, 300, length.out = q)
-Awiomso_site_2$P2O5_kg_ha <- rep(80, length.out = q)
-Awiomso_site_2$K2O_kg_ha <- rep(50, length.out = q)
+Wioso_site_n$N_kg_ha <- seq(0, 300, length.out = q)
+Wioso_site_n$P2O5_kg_ha <- rep(35, length.out = q)
+Wioso_site_n$K2O_kg_ha <- rep(35, length.out = q)
 
-Awiomso_N_fert_preds <- predict(rf_yield_model, Awiomso_site_2)$predictions
+Awiomso_N_fert_preds <- predict(rf_yield_model, Wioso_site_n)$predictions
 
 P <- ggplot()
-Aw_N <- P + geom_line(data = data.frame(nrow(Awiomso_site_2), Awiomso_N_fert_preds), 
-                   aes(Awiomso_site_2$N_kg_ha, Awiomso_N_fert_preds)) +
+Aw_N <- P + geom_line(data = data.frame(nrow(Wioso_site_n), Awiomso_N_fert_preds), 
+                   aes(Wioso_site_n$N_kg_ha, Awiomso_N_fert_preds)) +
   labs(title="",x ="N (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 200) +
+  ylim(1850, 2050) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Aw_N
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ###################  P2O5 Optimization  #############################
 q <- 1000
 
-Awiomso_site_3 <- data.frame(matrix(0, nrow = q, ncol = ncol(Awiomso_data))) 
-Awiomso_site_3 <- Awiomso_data[rep(1, q),]
+Wioso_site_p <- data.frame(matrix(0, nrow = q, ncol = ncol(Wioso_data))) 
+Wioso_site_p <- Awiomso_data[rep(1, q),]
 
-Awiomso_site_3$N_kg_ha <- rep(90, length.out = q)
-Awiomso_site_3$P2O5_kg_ha <- seq(0, 90, length.out = q)
-Awiomso_site_3$K2O_kg_ha <- rep(50, length.out = q)
+Wioso_site_p$N_kg_ha <- rep(90, length.out = q)
+Wioso_site_p$P2O5_kg_ha <- seq(0, 90, length.out = q)
+Wioso_site_p$K2O_kg_ha <- rep(35, length.out = q)
 
-Awiomso_P2O5_fert_preds <- predict(rf_yield_model, Awiomso_site_3)$predictions
+Awiomso_P2O5_fert_preds <- predict(rf_yield_model, Wioso_site_p)$predictions
 
 P <- ggplot()
-Aw_P <- P + geom_line(data = data.frame(nrow(Awiomso_site_3), Awiomso_P2O5_fert_preds), 
-                   aes(Awiomso_site_3$P2O5_kg_ha, Awiomso_P2O5_fert_preds)) +
-  labs(title="",x ="P2O5 (kg/ha)", y = "Grain Yield (kg/ha)") +
+Aw_P <- P + geom_line(data = data.frame(nrow(Wioso_site_p), Awiomso_P2O5_fert_preds), 
+                   aes(Wioso_site_p$P2O5_kg_ha, Awiomso_P2O5_fert_preds)) +
+  labs(title="",x ="P (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(10, 80) +
+  ylim(1850, 2050) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Aw_P
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
 ```
 
 ```{r}
 ################### K2O Optimization  #############################
 q <- 1000
 
-Awiomso_site_4 <- data.frame(matrix(0, nrow = q, ncol = ncol(Awiomso_data))) 
-Awiomso_site_4 <- Awiomso_data[rep(1, q),]
+Wioso_site_k <- data.frame(matrix(0, nrow = q, ncol = ncol(Wioso_data))) 
+Wioso_site_k <- Awiomso_data[rep(1, q),]
 
-Awiomso_site_4$N_kg_ha <- rep(90, length.out = q)
-Awiomso_site_4$P2O5_kg_ha <- rep(80, length.out = q)
-Awiomso_site_4$K2O_kg_ha <- seq(0, 100, length.out = q)
+Wioso_site_k$N_kg_ha <- rep(90, length.out = q)
+Wioso_site_k$P2O5_kg_ha <- rep(35, length.out = q)
+Wioso_site_k$K2O_kg_ha <- seq(0, 100, length.out = q)
 
-Awiomso_K2O_fert_preds <- predict(rf_yield_model, Awiomso_site_4)$predictions
+Awiomso_K2O_fert_preds <- predict(rf_yield_model, Wioso_site_k)$predictions
 
 P <- ggplot()
-Aw_K <- P + geom_line(data = data.frame(nrow(Awiomso_site_4), Awiomso_K2O_fert_preds), 
-                   aes(Awiomso_site_4$K2O_kg_ha, Awiomso_K2O_fert_preds)) +
-  labs(title="",x ="K2O (kg/ha)", y = "Grain Yield (kg/ha)") +
+Aw_K <- P + geom_line(data = data.frame(nrow(Wioso_site_k), Awiomso_K2O_fert_preds), 
+                   aes(Wioso_site_k$K2O_kg_ha, Awiomso_K2O_fert_preds)) +
+  labs(title="",x ="K (kg/ha)", y = "Grain Yield (kg/ha)") +
   scale_color_viridis_d() +
+  xlim(20, 80) +
+  ylim(1850, 2050) +
   theme(text = element_text(size = 100))+
   theme_classic() 
 Aw_K
-
-#ggsave(file = "Fert_Reccomendation.png", width = 10, height = 7, dpi = 300)
-```
-
-```{r}
-png(file = "Awiomso_rec.png", width = 2400, height = 1400, units = "px", res = 300, type = "cairo")
-#grid.arrange(p1,p2,p3,p4,p1_out,p2_out,p3_out,p4_out, ncol=4, nrow=2)
-plot_grid(Aw_N, Aw_P, Aw_K, align=("v"), labels = "Response curves for Awiomso", label_size = 13, ncol = 2, nrow = 2)
-dev.off()
 ```
 
 ```{r}
 # Predict yield based on new fertilizer recommendation for Awiomso Location
-Awiomso_opt <- Awiomso_data
-Awiomso_opt$N_kg_ha <- 90
-Awiomso_opt$P2O5_kg_ha <- 35
-Awiomso_opt$K2O_kg_ha <- 35
+Wioso <- Wioso_data
+Wioso$N_kg_ha <- 90
+Wioso$P2O5_kg_ha <- 35
+Wioso$K2O_kg_ha <- 35
 
-Awiomso_y <- predict(rf_yield_model, Awiomso_opt)$predictions
+Wioso_y <- predict(rf_yield_model, Wioso)$predictions
 
-Awiomso_y
+Wioso_y
+```
+
+```{r}
+png(file = "Response curves for Wioso.png", width = 3500, height = 2500, units = "px", res = 600, type = "cairo")
+p <- plot_grid(Aw_N, Aw_P, Aw_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
+title <- ggdraw() + draw_label("Response curves for Wioso")
+plot_grid(title, p, ncol=1, rel_heights=c(0.2, 3))
+dev.off()
+
+plot_grid(Aw_N, Aw_P, Aw_K, align=("v"), labels = c("a", "b", "c"), label_size = 12, ncol = 2, nrow = 2)
 ```
